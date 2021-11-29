@@ -14,12 +14,33 @@ import java.util.regex.Pattern;
 
 import org.springframework.stereotype.Service;
 
+import com.git.webapi.entity.Show;
+
 @Service
 public class WebService {
 	private static String path = "C:\\Users\\Admin\\Downloads\\netflix_titles.csv";
 	
-	public List<String> getAllTVShows(String count, String start, String end) throws ParseException, IOException{
-		List<String> shows = new ArrayList();
+	public List<Show> getAllTVShows(String count) throws  IOException{
+		List<Show> shows = new ArrayList();
+		
+		BufferedReader br = new BufferedReader(new FileReader(path));
+		String row =  "" ;
+		int n = Integer.parseInt(count);
+		while((row = br.readLine()) != null &&  n>0) {
+			String[] values = row.split(",");
+			 if(values[1].contentEquals("TV Show") ){
+				Show show =  createShow(row); // pojo creation call
+				shows.add(show);
+				n--;
+			}
+		}				
+		
+		return shows;
+		
+	}
+	
+	public List<Show> getAllTVShows( String start, String end) throws ParseException, IOException{
+		List<Show> shows = new ArrayList();
 		Date startDate=null;
 		Date endDate = null;
 		
@@ -30,19 +51,17 @@ public class WebService {
 		}
 		BufferedReader br = new BufferedReader(new FileReader(path));
 		String row =  "" ;
-		int n = Integer.parseInt(count);
-		while((row = br.readLine()) != null &&  n>0) {
+		while((row = br.readLine()) != null) {
 			String[] values = row.split(",");
+			try {
 			if(values[1].contentEquals("TV Show")  && startDate != null && endDate != null ){
 				Date actualDate = getDate(row);
-				if( actualDate.after(startDate) && actualDate.before(endDate)) {
-					shows.add(row);
-					n--;
+				if( actualDate != null && actualDate.after(startDate) && actualDate.before(endDate)) {
+					Show show =  createShow(row); // pojo creation call
+					shows.add(show);
 				}
-			}	else if(values[1].contentEquals("TV Show") ){
-				System.out.println("TV Show");
-				shows.add(row);
-				n--;
+			}	}catch (java.lang.ArrayIndexOutOfBoundsException e) {
+				continue;
 			}
 		}				
 		
@@ -51,66 +70,33 @@ public class WebService {
 	}
 	
 	
-	public List<String> getAllHorrorMovies(String type, String count, String start, String end) throws ParseException, IOException{
-		List<String> shows = new ArrayList();
-		Date startDate=null;
-		Date endDate = null;
-		
-		
-			if(!start.contentEquals("") && !end.contentEquals("")) {
-				
-				startDate = parseDate(start);
-				endDate = parseDate(end);
-				
-			}
+	public List<Show> getAllHorrorMovies(String type) throws IOException{
+		List<Show> shows = new ArrayList();
+			
 		BufferedReader br = new BufferedReader(new FileReader(path));
 		String row =  "" ;
-		int n = Integer.parseInt(count);
-		System.out.println(type);
-		while((row = br.readLine()) != null &&  n>0) {
-			if(row.contains(type) && startDate != null && endDate != null) {
-				Date actualDate = getDate(row);
-				if( actualDate.after(startDate) && actualDate.before(endDate)) {
-					shows.add(row);
-					n--;
-				}
-			} else if(row.contains(type) ) {
-					//System.out.println(row);
-					shows.add(row);
-					n--;
+		while((row = br.readLine()) != null ) {
+			if(row.contains(type) ) {
+				Show show =  createShow(row); // pojo creation call
+					shows.add(show);	
 			}
-			
 		}		
 		
-		System.out.println(shows.size());
 		return shows;
 		
 	}
 	
-	public List<String> getAllByCountry(String country, String count, String start, String end) throws ParseException, IOException{
-		List<String> shows = new ArrayList();
-		Date startDate=null;
-		Date endDate = null;
-		
-		
-			if(!start.contentEquals("") && !end.contentEquals("")) {
-				startDate = parseDate(start);
-				endDate = parseDate(end);
-			}
+	public List<Show> getAllByCountry(String country) throws  IOException{
+		List<Show> shows = new ArrayList();
+	
 		BufferedReader br = new BufferedReader(new FileReader(path));
 		String row =  "" ;
-		int n = Integer.parseInt(count);
-		while((row = br.readLine()) != null && n>0) {
-			if(row.contains(country) && startDate != null && endDate != null) {
-				Date actualDate = getDate(row);
-				if( actualDate.after(startDate) && actualDate.before(endDate)) {
-					shows.add(row);
-					n--;
-				}
-			} else if(row.contains(country) ) {
-					//System.out.println(row);
-					shows.add(row);
-					n--;
+		
+		while((row = br.readLine()) != null ) {
+			if(row.contains(country)  ) {
+				Show show =  createShow(row); // pojo creation call
+					shows.add(show);
+					
 			}
 		}			
 		
@@ -131,14 +117,13 @@ public class WebService {
 		    if (m.find())
 		    {
 		    	dateStr = m.group(0);
-		       
+				 String[] month  = dateStr.split(" ");
+				 String mon = convert(month[0]);
+				 String dateString = month[1].split(",")[0] + "/" + mon + "/"+ month[2];
+				 Date date  =new SimpleDateFormat("dd/MM/yyyy").parse(dateString);  
+				 return date;
 		    }
-		    String[] month  = dateStr.split(" ");
-		    String mon = convert(month[0]);
-		    
-		    String dateString = month[1].split(",")[0] + "/" + mon + "/"+ month[2];
-		    Date date  =new SimpleDateFormat("dd/MM/yyyy").parse(dateString);  
-		    return date;
+		   return null;
 	}
 	
 	public static String convert(String mon) {
@@ -160,5 +145,50 @@ public class WebService {
 		  return null;
 	  }
 	
+	
+	public Show createShow(String row) {
+		 String showId="", type="", title="", director="", cast="", country="", dateAdded="", releaseYear="", rating = "", duration ="", listedIn = "", description = "" ;
+				int index = 1;
+				boolean doubleQuotesBalanced = true;
+				for(int i=0; i< row.length(); i++) {
+					if(row.charAt(i) == ',' && doubleQuotesBalanced) {
+						index++;
+					}else if(row.charAt(i) == '\"') {
+						doubleQuotesBalanced = !doubleQuotesBalanced;
+					}
+					else {
+					
+					switch (index) {
+					case 1 : showId += row.charAt(i);
+					break;
+					case 2: type += row.charAt(i);
+					break;
+					case 3 : title+= row.charAt(i);
+					break;
+					case 4 : director+= row.charAt(i);
+					break;
+					case 5 : cast+= row.charAt(i);
+					break;
+					case 6 : country+= row.charAt(i);
+					break;
+					case 7 : dateAdded+= row.charAt(i);
+					break;
+					case 8 : releaseYear+= row.charAt(i);
+					break;
+					case 9 : rating+= row.charAt(i);
+					break;
+					case 10 : duration+= row.charAt(i);
+					break;
+					case 11 : listedIn+= row.charAt(i);
+					break;
+					case 12 : description+= row.charAt(i);
+					break;
+					}
+					}
+		
+			
+		}
+				return new Show(showId, type, title, director, cast, country, dateAdded, releaseYear, rating, duration, listedIn, description);
+	}
 	
 }
