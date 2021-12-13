@@ -15,21 +15,30 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.git.webapi.entity.Show;
-import com.git.webapi.service.WebService;
+import com.git.webapi.service.WebServiceCSV;
+import com.git.webapi.service.WebServiceJPA;
 
 @RestController
 public class WebController {
 	
 	@Autowired
-	public WebService webService;
+	private WebServiceCSV webService;
 	
-	 @RequestMapping(value = "/tvshows",params = "count", method = RequestMethod.GET)
-	 ResponseEntity  getTVShows(@RequestParam (value = "count" , defaultValue= "") String count) {
+	@Autowired
+	private WebServiceJPA webServiceJPA;
+	
+	 @RequestMapping(value = "/tvshows",params = {"count","fetchFrom"}, method = RequestMethod.GET)
+	 ResponseEntity  getTVShows(@RequestParam (value = "count" , defaultValue= "") int count, @RequestParam (value = "fetchFrom" , defaultValue= "") String fetchFrom) {
 		 long startTime = System.currentTimeMillis();
 		 List<Show> result = null;
 		 HttpHeaders headers = new HttpHeaders();
 		 try {
-			 result = webService.getAllTVShows(count);
+			 if(fetchFrom.contentEquals("csv")) {
+				 result = webService.getAllTVShows(count);
+			 }else {
+				 result =  webServiceJPA.getAllTVShows(count);
+			 }
+			 
 		 }
 		 catch (IOException e) {
 				e.printStackTrace();
@@ -45,13 +54,17 @@ public class WebController {
 	    }
 	
 	 
-	 @RequestMapping(value = "/tvshows", params = {"movieType"}, method = RequestMethod.GET)
-	 ResponseEntity  getHorrorMovies(@RequestParam (value = "movieType" , defaultValue= "") String type) {
+	 @RequestMapping(value = "/tvshows", params = {"movieType","fetchFrom"}, method = RequestMethod.GET)
+	 ResponseEntity  getHorrorMovies(@RequestParam (value = "movieType" , defaultValue= "") String type, @RequestParam (value = "fetchFrom" , defaultValue= "") String fetchFrom) {
 		 long startTime = System.currentTimeMillis();
 		 List<Show> result = null;
 		 HttpHeaders headers = new HttpHeaders();
 		 try {
-			 result = webService.getAllHorrorMovies(type);
+			 if(fetchFrom.contentEquals("csv")) {
+				 result = webService.getAllHorrorMovies(type);
+			 }else {
+				 result = webServiceJPA.getAllHorrorMovies(type);
+			 }
 		 }
 		 catch (IOException e) {
 				e.printStackTrace();
@@ -68,13 +81,18 @@ public class WebController {
 	    }
 	
 	 
-	 @RequestMapping(value = "/tvshows", params = {"country"}, method = RequestMethod.GET)
-	 ResponseEntity  getByCountry(@RequestParam (value = "country" , defaultValue= "") String country) {
+	 @RequestMapping(value = "/tvshows", params = {"country", "fetchFrom"}, method = RequestMethod.GET)
+	 ResponseEntity  getByCountry(@RequestParam (value = "country" , defaultValue= "") String country, @RequestParam (value = "fetchFrom" , defaultValue= "") String fetchFrom) {
 		 long startTime = System.currentTimeMillis();
 		 List<Show> result = null;
 		 HttpHeaders headers = new HttpHeaders();
 		 try {
-			 result = webService.getAllByCountry(country);
+			
+			 if(fetchFrom.contentEquals("csv")) {
+				 result = webService.getAllByCountry(country);
+			 }else {
+				 result = webServiceJPA.getAllByCountry(country);
+			 }
 		 }
 		 catch (IOException e) {
 				e.printStackTrace();
@@ -90,13 +108,19 @@ public class WebController {
 	    }
 	
 	 
-	 @RequestMapping(value = "/tvshows", params = {"startDate", "endDate"}, method = RequestMethod.GET)
-	 ResponseEntity  getByDate(@RequestParam(value = "startDate" , defaultValue= "") String startDate, @RequestParam(value = "endDate" , defaultValue= "") String endDate) {
+	 @RequestMapping(value = "/tvshows", params = {"startDate", "endDate", "fetchFrom"}, method = RequestMethod.GET)
+	 ResponseEntity  getByDate(@RequestParam(value = "startDate" , defaultValue= "") String startDate, @RequestParam(value = "endDate" , defaultValue= "") String endDate,  @RequestParam (value = "fetchFrom" , defaultValue= "") String fetchFrom) {
 		 long startTime = System.currentTimeMillis();
 		 List<Show> result = null;
 		 HttpHeaders headers = new HttpHeaders();
 		 try {
-			 result = webService.getAllTVShows(startDate, endDate);
+			 
+			
+			 if(fetchFrom.contentEquals("csv")) {
+				 result = webService.getAllTVShows(startDate, endDate);
+			 }else {
+				 result = webServiceJPA.getAllTVShows(startDate, endDate);
+			 }
 		 }
 		 catch (IOException e) {
 				e.printStackTrace();

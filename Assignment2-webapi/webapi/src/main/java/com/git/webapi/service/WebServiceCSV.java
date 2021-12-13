@@ -17,21 +17,20 @@ import org.springframework.stereotype.Service;
 import com.git.webapi.entity.Show;
 
 @Service
-public class WebService {
+public class WebServiceCSV {
 	private static String path = "C:\\Users\\Admin\\Downloads\\netflix_titles.csv";
 	
-	public List<Show> getAllTVShows(String count) throws  IOException{
+	public List<Show> getAllTVShows(int count) throws  IOException{
 		List<Show> shows = new ArrayList();
 		
 		BufferedReader br = new BufferedReader(new FileReader(path));
 		String row =  "" ;
-		int n = Integer.parseInt(count);
-		while((row = br.readLine()) != null &&  n>0) {
+		while((row = br.readLine()) != null &&  count>0) {
 			String[] values = row.split(",");
 			 if(values[1].contentEquals("TV Show") ){
 				Show show =  createShow(row); // pojo creation call
 				shows.add(show);
-				n--;
+				count--;
 			}
 		}				
 		
@@ -118,8 +117,17 @@ public class WebService {
 		    {
 		    	dateStr = m.group(0);
 				 String[] month  = dateStr.split(" ");
-				 String mon = convert(month[0]);
-				 String dateString = month[1].split(",")[0] + "/" + mon + "/"+ month[2];
+				 String dateString = "";
+					//dates starts with " "
+					if(month[0].contentEquals("")) {
+						 String mon = convert(month[1]);
+						  dateString = month[2].split(",")[0] + "/" + mon + "/"+ month[3];
+					}
+					//dates starts with month
+					else {
+						String mon = convert(month[0]);
+						 dateString = month[1].split(",")[0] + "/" + mon + "/"+ month[2];
+					}
 				 Date date  =new SimpleDateFormat("dd/MM/yyyy").parse(dateString);  
 				 return date;
 		    }
@@ -188,7 +196,7 @@ public class WebService {
 		
 			
 		}
-				return new Show(showId, type, title, director, cast, country, dateAdded, releaseYear, rating, duration, listedIn, description);
+				return new Show(showId, type, title, director, cast, country, dateAdded, Integer.parseInt(releaseYear), rating, duration, listedIn, description);
 	}
 	
 }

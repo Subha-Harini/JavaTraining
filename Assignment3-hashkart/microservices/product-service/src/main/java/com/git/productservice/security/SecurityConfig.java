@@ -1,4 +1,4 @@
-package com.git.webapi.security;
+package com.git.productservice.security;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -13,7 +13,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 
 @Configuration 
 @EnableWebSecurity
-public class Securityonfig extends WebSecurityConfigurerAdapter {
+public class SecurityConfig extends WebSecurityConfigurerAdapter {
 	
 	@Autowired
 	AppUserDetailsService appUserDetailsService;
@@ -34,15 +34,10 @@ public class Securityonfig extends WebSecurityConfigurerAdapter {
 	
 	@Override
     protected void configure(HttpSecurity httpSecurity) throws Exception {
-		 httpSecurity.csrf().disable().httpBasic().and()
-         .sessionManagement()
-         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-         .and()
-         .authorizeRequests()
-         .antMatchers("/authenticate").authenticated()
-         .antMatchers("/tvshows").authenticated()
-         .and().addFilter(new JwtAuthFilter(authenticationManager()));
-        
+		httpSecurity.csrf().disable().httpBasic().and().sessionManagement()
+		.sessionCreationPolicy(SessionCreationPolicy.STATELESS).and().authorizeRequests()
+		.anyRequest().authenticated().and()
+		.addFilter(new JwtAuthFilter(authenticationManager()));
     }
 
 }
